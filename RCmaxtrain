@@ -1,0 +1,56 @@
+#!/home/mbeer3/anaconda3/bin/python
+
+import os, sys, argparse, os.path
+
+def main():
+    parser = argparse.ArgumentParser()
+#    parser.parse_args()
+#    parser.add_argument("posfile",type=ascii, help="<posfile>")
+#    parser.add_argument("negfile",type=ascii, help="<negfile>")
+#    parser.add_argument("outprefix",type=ascii, help="<outprefix>")
+    parser.add_argument("posfile", help="<posfile>")
+    parser.add_argument("negfile", help="<negfile>")
+    parser.add_argument("outprefix", help="<outprefix>")
+    parser.add_argument("--maxpool1", type=int, help="max pooling size layer 1",default=4)
+    parser.add_argument("--dropout1", type=float, help="dropout rate layer 1",default=0.3)
+    parser.add_argument("--convfilt2", type=int, help="conv filter 2",default=140)
+    parser.add_argument("--convkern2", type=int, help="conv kernel 2",default=9)
+    parser.add_argument("--maxpool2", type=int, help="max pooling size layer 1",default=4)
+    parser.add_argument("--dropout2", type=float, help="dropout rate layer 1",default=0.3)
+    parser.add_argument("--convfilt3", type=int, help="conv filter 3",default=10)
+    parser.add_argument("--convkern3", type=int, help="conv kernel 3",default=9)
+    parser.add_argument("--maxpool3", type=int, help="max pooling size layer 3",default=4)
+    parser.add_argument("--dropout3", type=float, help="dropout rate layer 3",default=0.5)
+    parser.add_argument("--dense1", type=int, help="dense layer 1",default=100)
+    parser.add_argument("--lambda1", type=float, help="lambda 1",default=1e-9)
+    parser.add_argument("--lambda2", type=float, help="lambda 2",default=1e-9)
+    parser.add_argument("--rseed", type=int, help="random seed",default=0)
+
+
+    #regionsdistal1 4 0.3 140 9 4 0.3 10 9 4 0.5 100 1e-9 1e-9 2 regionsdistal_hg38_0.2_1.6_2_4.5_vs_0.0_0.825_35_300 
+
+    args = parser.parse_args()
+#    print(args)
+
+#    if len(sys.argv)!=4:
+#        print('Usage:  RCmaxtrain [options] <posfile> <negfile> <outprefix>')
+#        exit()
+
+    print(args.maxpool1,args.dropout1,args.convfilt2,args.convkern2,args.maxpool2,args.dropout2,args.convfilt3,args.convkern3,args.maxpool3,args.dropout3,args.dense1,args.lambda1,args.lambda2,args.rseed,args.posfile,args.negfile,args.outprefix)
+
+    os.system('python make_cv.py {0} {1} runs/{2} {3}'.format(args.posfile,args.negfile,args.outprefix,args.rseed))
+    i=1
+    while os.path.isfile('q'+str(i)):
+        i=i+1
+    qfile=open('q'+str(i),'w')
+    qfile.write('#!/bin/bash -l\n')
+    qfile.write('#SBATCH --gres=gpu:1\n')
+    qfile.write('#SBATCH --mem=200G\n')
+    qfile.write('source ../venv/bin/activate\n')
+    qfile.write('time THEANO_FLAGS=mode=FAST_RUN,device=cuda0,dnn.enabled=True,floatX=float32,dnn.conv.algo_bwd_filter=deterministic,dnn.conv.algo_bwd_data=deterministic python RCmax_param_vlen.py runs {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} > runs/{14}.out\n'.format(args.maxpool1,args.dropout1,args.convfilt2,args.convkern2,args.maxpool2,args.dropout2,args.convfilt3,args.convkern3,args.maxpool3,args.dropout3,args.dense1,args.lambda1,args.lambda2,args.rseed,args.outprefix))
+    qfile.write('echo "Finished with job"\n')
+    qfile.close()
+    os.system('cp q{0} runs/{1}.log'.format(i,args.outprefix))
+    os.system('sbatch q{0}'.format(i))
+    
+main()
