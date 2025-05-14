@@ -13,7 +13,7 @@ np.random.seed(int(sys.argv[15])) # for reproducibility
 random.seed(int(sys.argv[15]))  #used in keras/preprocessing/sequence.py
 import keras.backend as K
 from keras.preprocessing import sequence
-from keras.optimizers import RMSprop
+from tensorflow.keras.optimizers import RMSprop
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten, Lambda, Reshape
 from keras.layers.merge import maximum

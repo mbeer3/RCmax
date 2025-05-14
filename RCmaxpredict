@@ -1,4 +1,4 @@
-#!/home/mbeer3/anaconda3/bin/python
+#!/users/mbeer3/anaconda3/bin/python
 
 import os, sys, argparse, os.path
 
@@ -47,6 +47,7 @@ def main():
     qfile.write('#SBATCH --gres=gpu:1\n')
     qfile.write('#SBATCH --mem=200G\n')
     qfile.write('source ../venv/bin/activate\n')
+    qfile.write('export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python\n')
     qfile.write('time THEANO_FLAGS=mode=FAST_RUN,device=cuda0,dnn.enabled=True,floatX=float32,dnn.conv.algo_bwd_filter=deterministic,dnn.conv.algo_bwd_data=deterministic python RCmax_param_vlen_score.py runs {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} > runs/{14}_scoring.out\n'.format(args.maxpool1,args.dropout1,args.convfilt2,args.convkern2,args.maxpool2,args.dropout2,args.convfilt3,args.convkern3,args.maxpool3,args.dropout3,args.dense1,args.lambda1,args.lambda2,args.rseed,args.outprefix,predfile))
     qfile.write('echo "Finished with job"\n')
     qfile.close()
